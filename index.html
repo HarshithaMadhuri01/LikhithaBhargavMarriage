@@ -486,7 +486,7 @@
     <div class="gold-dust" id="dust-field"></div> <div class="overlay"></div>
 
     <!-- YouTube Player Container -->
-    <div id="player"></div>
+    <div id="player" style="position: absolute; top: -9999px; left: -9999px; opacity: 0; pointer-events: none;"></div>
 
     <section class="section" style="min-height: auto; padding: var(--section-padding);">
         <div class="hero reveal reveal-stagger">
@@ -858,11 +858,11 @@
             player = new YT.Player('player', {
                 height: '0',
                 width: '0',
-                videoId: 'GyFcKErEmI8',  
+                videoId: 'gdRxCOSH3LQ',  
                 playerVars: {
                     'autoplay': 1,
                     'loop': 1,
-                    'playlist': 'GyFcKErEmI8',
+                    'playlist':'gdRxCOSH3LQ',
                     'playsinline': 1,
                     'controls': 0,
                     'showinfo': 0,
@@ -874,24 +874,32 @@
                 }
             });
         }
-
+        
         function onPlayerReady(event) {
-            event.target.setVolume(50);
-            event.target.unMute();
+            // Unmute and play as early as possible
             event.target.playVideo();
             
-            // Browser policy workaround: Start audio after first user interaction
-            const playOnInteraction = () => {
-                event.target.playVideo();
+            // Browser policy workaround: unmuted audio requires user interaction
+            const unmuteAudio = () => {
                 event.target.unMute();
-                document.removeEventListener('click', playOnInteraction);
-                document.removeEventListener('touchstart', playOnInteraction);
-                document.removeEventListener('scroll', playOnInteraction);
+                event.target.setVolume(70); // Set to a clear audible volume
+                event.target.playVideo();
+                
+                // Cleanup all interaction listeners
+                ['click', 'touchstart', 'scroll', 'mousemove', 'keydown'].forEach(evt => {
+                    document.removeEventListener(evt, unmuteAudio);
+                });
             };
 
-            document.addEventListener('click', playOnInteraction);
-            document.addEventListener('touchstart', playOnInteraction);
-            document.addEventListener('scroll', playOnInteraction);
+            // Register all possible user interactions to trigger unmuting
+            ['click', 'touchstart', 'scroll', 'mousemove', 'keydown'].forEach(evt => {
+                document.addEventListener(evt, unmuteAudio, { once: true });
+            });
+            
+            // Final fallback to try and trigger play/unmute
+            setTimeout(() => {
+                event.target.playVideo();
+            }, 500);
         }
 
         // UTILITY: Back to Top button visibility control
